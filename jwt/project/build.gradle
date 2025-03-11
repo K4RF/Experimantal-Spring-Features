@@ -42,6 +42,8 @@ dependencies {
 	// 스프링 security
 	implementation("org.springframework.boot:spring-boot-starter-security")
 
+	// h2 데이터베이스 설정
+	implementation("com.h2database:h2")
 }
 
 tasks.named('test') {
