@@ -1,6 +1,7 @@
-package jwt.project;
+package jwt.project.service;
 
 import jwt.project.entity.Member;
+import jwt.project.entity.enums.Role;
 import jwt.project.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -13,12 +14,11 @@ public class MemberService {
     private final PasswordEncoder passwordEncoder;
 
     public void register(Member member) {
-        member.setPassword(passwordEncoder.encode(member.getPassword())); // 비밀번호 암호화
+        member.setPassword(passwordEncoder.encode(member.getPassword()));
         memberRepository.save(member);
     }
-
-    public Member login(String username, String password) {
-        Member member = memberRepository.findByUsername(username)
+    public Member login(String loginId, String password) {
+        Member member = memberRepository.findByLoginId(loginId)
                 .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
 
         if (!passwordEncoder.matches(password, member.getPassword())) {
