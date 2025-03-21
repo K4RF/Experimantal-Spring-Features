@@ -60,6 +60,18 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
                     "name", name
             );
             response.getWriter().write(objectMapper.writeValueAsString(result));
+
+            /*
+             // 리디렉션으로 추가 정보 입력 페이지로 이동
+            String redirectUrl = UriComponentsBuilder.fromUriString("http://localhost:3000/oauth-register")
+            .queryParam("socialId", socialId)
+            .queryParam("socialType", SocialType.GOOGLE)
+            .queryParam("email", email)
+            .queryParam("name", name)
+            .build().toUriString();
+
+             response.sendRedirect(redirectUrl);
+             */
         }
     }
 }
