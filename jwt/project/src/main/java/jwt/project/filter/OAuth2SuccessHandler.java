@@ -31,38 +31,34 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
         OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
 
+        String socialId = oAuth2User.getAttribute("sub"); // 구글 고유 ID
         String email = oAuth2User.getAttribute("email");
-        String googleSub = oAuth2User.getAttribute("sub");
         String name = oAuth2User.getAttribute("name");
-
-        Optional<Member> memberOpt = memberRepository.findBySocialIdAndSocialType(googleSub, SocialType.GOOGLE);
 
         response.setContentType("application/json;charset=UTF-8");
 
+        Optional<Member> memberOpt = memberRepository.findBySocialIdAndSocialType(socialId, SocialType.GOOGLE);
+
         if (memberOpt.isPresent()) {
-            // ✅ 로그인 성공 → JWT 발급
+            // ✅ 로그인 처리
             Member member = memberOpt.get();
             String token = jwtUtil.generateToken(member.getLoginId(), member.getRole().name());
 
             Map<String, Object> result = Map.of(
-                    "message", "로그인 성공",
+                    "message", "소셜 로그인 성공",
                     "token", token,
                     "loginId", member.getLoginId()
             );
-
             response.getWriter().write(objectMapper.writeValueAsString(result));
-
         } else {
-            // ✅ 아직 회원가입 안 된 경우 → 회원가입 유도 정보 반환
+            // ❗ 추가정보 입력을 위한 안내
             Map<String, Object> result = Map.of(
-                    "message", "추가 정보가 필요합니다. /api/auth/social-register를 호출하세요.",
-                    "socialId", googleSub,
+                    "message", "회원 정보가 없습니다. 추가 정보를 입력해주세요.",
+                    "socialId", socialId,
                     "socialType", SocialType.GOOGLE,
                     "email", email,
                     "name", name
             );
-
-            response.setStatus(HttpServletResponse.SC_OK);
             response.getWriter().write(objectMapper.writeValueAsString(result));
         }
     }

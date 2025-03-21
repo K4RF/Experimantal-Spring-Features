@@ -1,12 +1,17 @@
 package jwt.project.service;
 
+import jwt.project.dto.request.SocialRegisterRequest;
 import jwt.project.entity.Member;
 import jwt.project.entity.enums.Role;
+import jwt.project.entity.enums.SocialType;
 import jwt.project.repository.MemberRepository;
 import jwt.project.utils.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 public class MemberService {
@@ -45,4 +50,25 @@ public class MemberService {
 
         return jwtUtil.generateToken(member.getLoginId(), member.getRole().name());
     }
+    public void registerSocialUser(SocialRegisterRequest request) {
+        // 비밀번호 처리
+        String encodedPassword = (request.getPassword() != null && !request.getPassword().isEmpty())
+                ? passwordEncoder.encode(request.getPassword())
+                : "";
+
+        // 소셜 타입이 명확하지 않으면 예외 처리
+        SocialType socialType = Optional.ofNullable(request.getSocialType())
+                .orElseThrow(() -> new IllegalArgumentException("소셜 타입이 필요합니다."));
+
+        Member member = new Member();
+        member.setLoginId(request.getLoginId());
+        member.setPassword(encodedPassword);
+        member.setName(request.getName());
+        member.setRole(Role.USER);
+        member.setSocialId(request.getSocialId());
+        member.setSocialType(socialType);
+
+        memberRepository.save(member);
+    }
+
 }
