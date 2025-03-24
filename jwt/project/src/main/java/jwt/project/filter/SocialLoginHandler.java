@@ -20,7 +20,7 @@ import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
-public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
+public class SocialLoginHandler implements AuthenticationSuccessHandler {
 
     private final MemberRepository memberRepository;
     private final JwtUtil jwtUtil;
