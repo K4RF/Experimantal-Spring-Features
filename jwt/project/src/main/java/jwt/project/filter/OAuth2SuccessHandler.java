@@ -9,6 +9,7 @@ import jwt.project.repository.MemberRepository;
 import jwt.project.utils.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
@@ -31,13 +32,29 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
         OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
 
-        String socialId = oAuth2User.getAttribute("sub"); // 구글 고유 ID
-        String email = oAuth2User.getAttribute("email");
-        String name = oAuth2User.getAttribute("name");
+        // 소셜 타입 파악 (GOOGLE, NAVER 등)
+        String registrationId = ((OAuth2AuthenticationToken) authentication).getAuthorizedClientRegistrationId().toUpperCase();
+        SocialType socialType = SocialType.valueOf(registrationId); // "GOOGLE", "NAVER" → enum으로 변환
+
+        // 소셜 플랫폼별 정보 파싱
+        String socialId;
+        String email;
+        String name;
+
+        if (socialType == SocialType.NAVER) {
+            Map<String, Object> responseData = (Map<String, Object>) oAuth2User.getAttributes().get("response");
+            socialId = (String) responseData.get("id");
+            email = (String) responseData.get("email");
+            name = (String) responseData.get("name");
+        } else { // 기본은 구글
+            socialId = oAuth2User.getAttribute("sub");
+            email = oAuth2User.getAttribute("email");
+            name = oAuth2User.getAttribute("name");
+        }
 
         response.setContentType("application/json;charset=UTF-8");
 
-        Optional<Member> memberOpt = memberRepository.findBySocialIdAndSocialType(socialId, SocialType.GOOGLE);
+        Optional<Member> memberOpt = memberRepository.findBySocialIdAndSocialType(socialId, socialType);
 
         if (memberOpt.isPresent()) {
             // ✅ 로그인 처리
@@ -55,12 +72,11 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
             Map<String, Object> result = Map.of(
                     "message", "회원 정보가 없습니다. 추가 정보를 입력해주세요.",
                     "socialId", socialId,
-                    "socialType", SocialType.GOOGLE,
+                    "socialType", socialType,
                     "email", email,
                     "name", name
             );
             response.getWriter().write(objectMapper.writeValueAsString(result));
-
             /*
              // 리디렉션으로 추가 정보 입력 페이지로 이동
             String redirectUrl = UriComponentsBuilder.fromUriString("http://localhost:3000/oauth-register")
