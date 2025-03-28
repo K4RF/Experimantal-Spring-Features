@@ -71,4 +71,9 @@ public class MemberService {
         memberRepository.save(member);
     }
 
+
+    public Member findByLoginId(String loginId) {
+        return memberRepository.findByLoginId(loginId)
+                .orElseThrow(() -> new RuntimeException("회원을 찾을 수 없습니다."));
+    }
 }
