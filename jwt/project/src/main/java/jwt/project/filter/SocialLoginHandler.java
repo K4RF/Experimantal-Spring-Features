@@ -43,10 +43,18 @@ public class SocialLoginHandler implements AuthenticationSuccessHandler {
 
         if (socialType == SocialType.NAVER) {
             Map<String, Object> responseData = (Map<String, Object>) oAuth2User.getAttributes().get("response");
-            socialId = (String) responseData.get("id");
+            socialId = String.valueOf(responseData.get("id")); // ✅ 안전하게 Long → String 변환
             email = (String) responseData.get("email");
             name = (String) responseData.get("name");
-        } else { // 기본은 구글
+
+        }else if (socialType == SocialType.KAKAO) {
+            Map<String, Object> kakaoAccount = (Map<String, Object>) oAuth2User.getAttributes().get("kakao_account");
+            Map<String, Object> profile = (Map<String, Object>) kakaoAccount.get("profile");
+
+            socialId = String.valueOf(oAuth2User.getAttributes().get("id")); // ✅ 정확하게 이렇게 되어 있어야 해
+            email = (String) kakaoAccount.get("email");
+            name = (String) profile.get("nickname");
+        } else { // 기본은 GOOGLE
             socialId = oAuth2User.getAttribute("sub");
             email = oAuth2User.getAttribute("email");
             name = oAuth2User.getAttribute("name");
