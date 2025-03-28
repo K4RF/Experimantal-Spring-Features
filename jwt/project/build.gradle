@@ -44,6 +44,9 @@ dependencies {
 
 	// h2 데이터베이스 설정
 	implementation("com.h2database:h2")
+
+	// 구글 api
+	implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
 }
 
 tasks.named('test') {

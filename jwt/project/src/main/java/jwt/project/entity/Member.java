@@ -2,6 +2,7 @@ package jwt.project.entity;
 
 import jakarta.persistence.*;
 import jwt.project.entity.enums.Role;
+import jwt.project.entity.enums.SocialType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -26,5 +27,10 @@ public class Member {
     private String name;
 
     @Enumerated(EnumType.STRING)
-    private Role role; // ✅ 역할 추가
+    private Role role;
+
+    @Enumerated(EnumType.STRING)
+    private SocialType socialType;  // GOOGLE, KAKAO, NAVER 등
+
+    private String socialId; // 구글에서 제공하는 sub 값
 }
