@@ -2,14 +2,17 @@ package jwt.project.service;
 
 import jwt.project.dto.request.SocialRegisterRequest;
 import jwt.project.entity.Member;
+import jwt.project.entity.RefreshToken;
 import jwt.project.entity.enums.Role;
 import jwt.project.entity.enums.SocialType;
 import jwt.project.repository.MemberRepository;
+import jwt.project.repository.RefreshTokenRepository;
 import jwt.project.utils.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -19,6 +22,7 @@ public class MemberService {
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     public void registerUser(String loginId, String password, String name) {
         Member member = new Member();
@@ -40,7 +44,7 @@ public class MemberService {
         memberRepository.save(member);
     }
 
-    public String loginAndGetToken(String loginId, String password) {
+    public Map<String, String> loginAndGetToken(String loginId, String password) {
         Member member = memberRepository.findByLoginId(loginId)
                 .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
 
@@ -48,8 +52,24 @@ public class MemberService {
             throw new RuntimeException("비밀번호가 일치하지 않습니다.");
         }
 
-        return jwtUtil.generateToken(member.getLoginId(), member.getRole().name());
+        // ✅ Access Token과 Refresh Token 생성
+        String accessToken = jwtUtil.generateToken(member.getLoginId(), member.getRole().name());
+        String refreshToken = jwtUtil.generateRefreshToken(member.getLoginId());
+
+        // ✅ Refresh Token DB 저장 (이미 있으면 갱신)
+        Optional<RefreshToken> existingToken = refreshTokenRepository.findByLoginId(loginId);
+        if (existingToken.isPresent()) {
+            existingToken.get().setRefreshToken(refreshToken);
+            refreshTokenRepository.save(existingToken.get());
+        } else {
+            refreshTokenRepository.save(new RefreshToken(null, loginId, refreshToken));
+        }
+
+        // ✅ Access Token과 Refresh Token Map으로 반환
+        return Map.of("accessToken", accessToken, "refreshToken", refreshToken);
     }
+
+
     public void registerSocialUser(SocialRegisterRequest request) {
         // 비밀번호 처리
         String encodedPassword = (request.getPassword() != null && !request.getPassword().isEmpty())

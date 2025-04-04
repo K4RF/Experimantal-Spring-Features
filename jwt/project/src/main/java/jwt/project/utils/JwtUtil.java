@@ -13,6 +13,7 @@ public class JwtUtil {
 
     private final SecretKey secretKey = Keys.secretKeyFor(SignatureAlgorithm.HS256);  // ✅ 안전한 키 자동 생성
     private final long expireTime = 1000 * 60 * 60; // 1시간
+    private final long refreshExpireTime = 1000 * 60 * 60 * 24 * 7; // 7일
 
     public String generateToken(String username, String role) {
         return Jwts.builder()
@@ -24,14 +25,21 @@ public class JwtUtil {
                 .compact();
     }
 
-    public String validateToken(String token) {
+    public String generateRefreshToken(String username) {
+        return Jwts.builder()
+                .setSubject(username)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + refreshExpireTime))
+                .signWith(secretKey)
+                .compact();
+    }
+    public Claims validateToken(String token) {
         try {
             return Jwts.parserBuilder()
                     .setSigningKey(secretKey)
                     .build()
                     .parseClaimsJws(token)
-                    .getBody()
-                    .getSubject();
+                    .getBody();
         } catch (Exception e) {
             return null;
         }
