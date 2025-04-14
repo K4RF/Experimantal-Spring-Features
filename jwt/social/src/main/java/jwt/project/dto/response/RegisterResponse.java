@@ -6,6 +6,6 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class RegisterResponse {
-    private String accessToken;
+    private String message;
     private String loginId;
 }

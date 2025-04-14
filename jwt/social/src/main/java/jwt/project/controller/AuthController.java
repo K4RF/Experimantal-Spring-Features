@@ -1,6 +1,8 @@
 package jwt.project.controller;
 
+import jwt.project.dto.request.LoginRequest;
 import jwt.project.dto.request.RegisterRequest;
+import jwt.project.dto.response.LoginResponse;
 import jwt.project.dto.response.RegisterResponse;
 import jwt.project.service.MemberService;
 import lombok.RequiredArgsConstructor;
@@ -22,9 +24,15 @@ public class AuthController {
         return ResponseEntity.ok(new RegisterResponse("회원 가입 성공(USER)", requestDto.getLoginId()));
     }
 
-    @PostMapping("/register/user")
+    @PostMapping("/register/admin")
     public ResponseEntity<RegisterResponse> registerAdmin(@RequestBody RegisterRequest requestDto) {
         memberService.registerAdmin(requestDto.getLoginId(), requestDto.getPassword(), requestDto.getName());
         return ResponseEntity.ok(new RegisterResponse("회원 가입 성공(Admin)", requestDto.getLoginId()));
+    }
+
+    @PostMapping
+    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest requestDto) {
+        String token = memberService.loginAndGetToken(requestDto.getLoginId(), requestDto.getPassword());
+        return ResponseEntity.ok(new LoginResponse(token, requestDto.getLoginId()));
     }
 }
