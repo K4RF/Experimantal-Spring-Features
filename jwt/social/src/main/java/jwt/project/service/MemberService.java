@@ -19,6 +19,7 @@ public class MemberService {
         Member member = new Member();
         member.setLoginId(loginId);
         member.setPassword(passwordEncoder.encode(password));
+        member.setName(name);
         member.setRole(Role.USER);
 
         memberRepository.save(member);
@@ -28,6 +29,7 @@ public class MemberService {
         Member member = new Member();
         member.setLoginId(loginId);
         member.setPassword(passwordEncoder.encode(password));
+        member.setName(name);
         member.setRole(Role.ADMIN);
 
         memberRepository.save(member);

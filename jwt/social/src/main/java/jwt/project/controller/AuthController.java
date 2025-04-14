@@ -21,16 +21,16 @@ public class AuthController {
     @PostMapping("/register/user")
     public ResponseEntity<RegisterResponse> registerUser(@RequestBody RegisterRequest requestDto) {
         memberService.registerUser(requestDto.getLoginId(), requestDto.getPassword(), requestDto.getName());
-        return ResponseEntity.ok(new RegisterResponse("회원 가입 성공(USER)", requestDto.getLoginId()));
+        return ResponseEntity.ok(new RegisterResponse("회원가입 성공(USER)", requestDto.getLoginId()));
     }
 
     @PostMapping("/register/admin")
     public ResponseEntity<RegisterResponse> registerAdmin(@RequestBody RegisterRequest requestDto) {
         memberService.registerAdmin(requestDto.getLoginId(), requestDto.getPassword(), requestDto.getName());
-        return ResponseEntity.ok(new RegisterResponse("회원 가입 성공(Admin)", requestDto.getLoginId()));
+        return ResponseEntity.ok(new RegisterResponse("회원가입 성공(ADMIN)", requestDto.getLoginId()));
     }
 
-    @PostMapping
+    @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest requestDto) {
         String token = memberService.loginAndGetToken(requestDto.getLoginId(), requestDto.getPassword());
         return ResponseEntity.ok(new LoginResponse(token, requestDto.getLoginId()));
