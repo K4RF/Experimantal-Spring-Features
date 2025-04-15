@@ -1,6 +1,7 @@
 package jwt.project.config;
 
 import jwt.project.filter.JwtFilter;
+import jwt.project.filter.SocialLoginHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,6 +19,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @RequiredArgsConstructor
 public class SecurityConfig {
     private final JwtFilter jwtFilter;
+    private final SocialLoginHandler socialLoginHandler;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -34,6 +36,8 @@ public class SecurityConfig {
                                 "/webjars/**"
                         ).permitAll()
                         .anyRequest().authenticated()
+                ).oauth2Login(oauth -> oauth
+                        .successHandler(socialLoginHandler) // ✅ 구글 로그인 성공 후 처리
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
