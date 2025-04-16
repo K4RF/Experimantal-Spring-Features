@@ -1,5 +1,6 @@
 package jwt.project.service;
 
+import jakarta.transaction.Transactional;
 import jwt.project.dto.request.SocialRegisterRequest;
 import jwt.project.entity.Member;
 import jwt.project.entity.RefreshToken;
@@ -85,6 +86,16 @@ public class MemberService {
         member.setSocialType(socialType);
         member.setName(request.getName());
         member.setSocialId(request.getSocialId());
+
+        memberRepository.save(member);
+    }
+
+    @Transactional
+    public void disconnectSocialAccount(String loginId) {
+        Member member = findByLoginId(loginId);
+
+        member.setSocialType(null);
+        member.setSocialType(null);
 
         memberRepository.save(member);
     }
