@@ -77,8 +77,18 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Refresh token mismatch");
         }
 
-        // 새로운 AccessToken 발급
+        // ✅ 새로운 Access Token + Refresh Token 발급
         String newAccessToken = jwtUtil.generateToken(loginId, "USER");
-        return ResponseEntity.ok(Map.of("access_token", newAccessToken));
+        String newRefreshToken = jwtUtil.refreshToken(loginId);
+
+        // ✅ DB에 Refresh Token 갱신
+        RefreshToken storedToken = refreshTokenOpt.get();
+        storedToken.setRefreshToken(newRefreshToken);
+        refreshTokenRepository.save(storedToken);
+
+        return ResponseEntity.ok(Map.of(
+                "accessToken", newAccessToken,
+                "refreshToken", newRefreshToken
+        ));
     }
 }
