@@ -94,7 +94,7 @@ public class MemberService {
     public void disconnectSocialAccount(String loginId) {
         Member member = findByLoginId(loginId);
 
-        member.setSocialType(null);
+        member.setSocialId(null);
         member.setSocialType(null);
 
         memberRepository.save(member);
