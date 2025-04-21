@@ -50,6 +50,13 @@ public class AuthController {
         return ResponseEntity.ok(new LoginResponse(accessToken, refreshToken, requestDto.getLoginId()));
     }
 
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(@AuthenticationPrincipal String loginId) {
+        refreshTokenRepository.findByLoginId(loginId).ifPresent(refreshTokenRepository::delete);
+
+        return ResponseEntity.ok(Map.of("message", "로그아웃 처리 완료. Refresh Token 삭제됨"));
+    }
+
     @PostMapping("/social-register")
     public ResponseEntity<?> registerSocial(@RequestBody SocialRegisterRequest request) {
         memberService.registerSocialUser(request);
