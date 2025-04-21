@@ -1,14 +1,14 @@
 package jwt.project.controller;
 
 import io.jsonwebtoken.Claims;
+import jwt.project.dto.request.LoginRequest;
+import jwt.project.dto.request.RegisterRequest;
 import jwt.project.dto.request.SocialRegisterRequest;
+import jwt.project.dto.response.LoginResponse;
+import jwt.project.dto.response.RegisterResponse;
 import jwt.project.entity.RefreshToken;
 import jwt.project.repository.RefreshTokenRepository;
 import jwt.project.service.MemberService;
-import jwt.project.dto.request.LoginRequest;
-import jwt.project.dto.request.RegisterRequest;
-import jwt.project.dto.response.LoginResponse;
-import jwt.project.dto.response.RegisterResponse;
 import jwt.project.utils.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -25,9 +25,9 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @RequestMapping("/api/auth")
 public class AuthController {
+    private final MemberService memberService;
     private final JwtUtil jwtUtil;
     private final RefreshTokenRepository refreshTokenRepository;
-    private final MemberService memberService;
 
     @PostMapping("/register/user")
     public ResponseEntity<RegisterResponse> registerUser(@RequestBody RegisterRequest requestDto) {
@@ -50,6 +50,13 @@ public class AuthController {
         return ResponseEntity.ok(new LoginResponse(accessToken, refreshToken, requestDto.getLoginId()));
     }
 
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(@AuthenticationPrincipal String loginId) {
+        refreshTokenRepository.findByLoginId(loginId).ifPresent(refreshTokenRepository::delete);
+
+        return ResponseEntity.ok(Map.of("message", "로그아웃 처리 완료. Refresh Token 삭제됨"));
+    }
+
     @PostMapping("/social-register")
     public ResponseEntity<?> registerSocial(@RequestBody SocialRegisterRequest request) {
         memberService.registerSocialUser(request);
@@ -61,24 +68,34 @@ public class AuthController {
 
     @PostMapping("/refresh")
     public ResponseEntity<?> refreshToken(@RequestBody Map<String, String> request) {
-        String refreshToken = request.get("refreshToken");
+        String refreshToken = request.get("refresh_token");
 
-        // ✅ Refresh Token 유효성 검증
+        // Refresh Token 유효성 검증
         Claims claims = jwtUtil.validateToken(refreshToken);
         if (claims == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid Refresh Token");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid refresh token");
         }
 
         String loginId = claims.getSubject();
 
-        // ✅ DB에서 Refresh Token 확인
+        // DB에서 Refresh Token 확인
         Optional<RefreshToken> refreshTokenOpt = refreshTokenRepository.findByLoginId(loginId);
-        if (refreshTokenOpt.isEmpty() || !refreshTokenOpt.get().getRefreshToken().equals(refreshToken)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Refresh Token mismatch");
+        if(refreshTokenOpt.isEmpty() || !refreshTokenOpt.get().getId().equals(refreshToken)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Refresh token mismatch");
         }
 
-        // ✅ 새로운 Access Token 발급
+        // ✅ 새로운 Access Token + Refresh Token 발급
         String newAccessToken = jwtUtil.generateToken(loginId, "USER");
-        return ResponseEntity.ok(Map.of("accessToken", newAccessToken));
+        String newRefreshToken = jwtUtil.refreshToken(loginId);
+
+        // ✅ DB에 Refresh Token 갱신
+        RefreshToken storedToken = refreshTokenOpt.get();
+        storedToken.setRefreshToken(newRefreshToken);
+        refreshTokenRepository.save(storedToken);
+
+        return ResponseEntity.ok(Map.of(
+                "accessToken", newAccessToken,
+                "refreshToken", newRefreshToken
+        ));
     }
 }

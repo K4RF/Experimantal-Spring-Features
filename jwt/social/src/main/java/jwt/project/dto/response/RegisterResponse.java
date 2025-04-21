@@ -2,12 +2,10 @@ package jwt.project.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.Getter;
 
 @Data
 @AllArgsConstructor
-public class LoginResponse {
-    private String accessToken;
-    private String refreshToken;
+public class RegisterResponse {
+    private String message;
     private String loginId;
 }
