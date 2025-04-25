@@ -42,15 +42,5 @@ public class UserController {
         return ResponseEntity.ok(Map.of("message", "소셜 연동이 해제되었습니다"));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/admin/secret")
-    public ResponseEntity<?> getAdminOnlyData() {
-        return ResponseEntity.ok("관리자 전용 데이터입니다.");
-    }
 
-    @Secured("ROLE_ADMIN")
-    @GetMapping("/admin/users")
-    public ResponseEntity<?> getAllUsers() {
-        return ResponseEntity.ok("어드민만 볼 수 있는 회원 목록");
-    }
 }
