@@ -42,8 +42,12 @@ dependencies {
 	// 스프링 security
 	implementation("org.springframework.boot:spring-boot-starter-security")
 
-	// mysql 추가
-	implementation 'mysql:mysql-connector-java:8.0.33'
+	// mysql 추가(pc)
+	//implementation 'mysql:mysql-connector-java:8.0.33'
+
+	// h2 추가(labtop)
+	implementation("com.h2database:h2")
+
 	// 구글 api
 	implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
 }
