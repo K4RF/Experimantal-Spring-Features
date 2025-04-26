@@ -3,6 +3,8 @@ package jwt.project.config;
 import jwt.project.filter.JwtFilter;
 import jwt.project.filter.SocialLoginHandler;
 import jwt.project.handler.CustomAccessDeniedHandler;
+import jwt.project.handler.login.CustomAuthenticationFailureHandler;
+import jwt.project.handler.login.CustomAuthenticationSuccessHandler;
 import jwt.project.utils.CustomAuthenticationEntryPoint;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -27,6 +29,8 @@ public class SecurityConfig {
     private final SocialLoginHandler socialLoginHandler;
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
     private final CustomAccessDeniedHandler customAccessDeniedHandler;
+    private final CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler;
+    private final CustomAuthenticationFailureHandler customAuthenticationFailureHandler;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -49,6 +53,11 @@ public class SecurityConfig {
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")           // 관리자 전용
                         .requestMatchers("/api/user/**").hasAnyRole("USER", "ADMIN") // 회원용
                         .anyRequest().authenticated()
+                ).formLogin(form -> form
+                        .loginProcessingUrl("/api/auth/login") // ⭐️ form login 엔드포인트 설정 (API용)
+                        .successHandler(customAuthenticationSuccessHandler)
+                        .failureHandler(customAuthenticationFailureHandler)
+                        .permitAll()
                 )
                 .oauth2Login(oauth -> oauth
                         .successHandler(socialLoginHandler)  // 소셜 로그인 성공 후 처리
