@@ -2,6 +2,8 @@ package jwt.project.config;
 
 import jwt.project.filter.JwtFilter;
 import jwt.project.filter.SocialLoginHandler;
+import jwt.project.handler.CustomAccessDeniedHandler;
+import jwt.project.utils.CustomAuthenticationEntryPoint;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,12 +25,18 @@ public class SecurityConfig {
 
     private final JwtFilter jwtFilter;
     private final SocialLoginHandler socialLoginHandler;
+    private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+    private final CustomAccessDeniedHandler customAccessDeniedHandler;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint(customAuthenticationEntryPoint) // 🔥 인증 실패
+                        .accessDeniedHandler(customAccessDeniedHandler)           // 🔥 권한 실패
+                )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/api/auth/**",       // 로그인, 회원가입, 토큰 재발급
