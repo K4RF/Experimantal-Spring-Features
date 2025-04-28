@@ -1,6 +1,8 @@
 package jwt.project.config;
 
+import jakarta.servlet.Filter;
 import jwt.project.filter.JwtFilter;
+import jwt.project.filter.RequestLoggingFilter;
 import jwt.project.filter.SocialLoginHandler;
 import jwt.project.handler.CustomAccessDeniedHandler;
 import jwt.project.handler.login.CustomAuthenticationFailureHandler;
@@ -31,6 +33,7 @@ public class SecurityConfig {
     private final CustomAccessDeniedHandler customAccessDeniedHandler;
     private final CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler;
     private final CustomAuthenticationFailureHandler customAuthenticationFailureHandler;
+    private final RequestLoggingFilter requestLoggingFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -62,6 +65,7 @@ public class SecurityConfig {
                 .oauth2Login(oauth -> oauth
                         .successHandler(socialLoginHandler)  // 소셜 로그인 성공 후 처리
                 )
+                .addFilterBefore(requestLoggingFilter, JwtFilter.class)  // 🔥 추가
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
