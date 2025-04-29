@@ -1,12 +1,9 @@
 package jwt.project.config;
 
-import jakarta.servlet.Filter;
 import jwt.project.filter.JwtFilter;
 import jwt.project.filter.RequestLoggingFilter;
 import jwt.project.filter.SocialLoginHandler;
 import jwt.project.handler.CustomAccessDeniedHandler;
-import jwt.project.handler.login.CustomAuthenticationFailureHandler;
-import jwt.project.handler.login.CustomAuthenticationSuccessHandler;
 import jwt.project.utils.CustomAuthenticationEntryPoint;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -26,13 +23,10 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableMethodSecurity(prePostEnabled = true, securedEnabled = true) // ✅ 핵심!
 @RequiredArgsConstructor
 public class SecurityConfig {
-
     private final JwtFilter jwtFilter;
     private final SocialLoginHandler socialLoginHandler;
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
     private final CustomAccessDeniedHandler customAccessDeniedHandler;
-    private final CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler;
-    private final CustomAuthenticationFailureHandler customAuthenticationFailureHandler;
     private final RequestLoggingFilter requestLoggingFilter;
 
     @Bean
@@ -45,28 +39,33 @@ public class SecurityConfig {
                         .accessDeniedHandler(customAccessDeniedHandler)           // 🔥 권한 실패
                 )
                 .authorizeHttpRequests(auth -> auth
+                        // ① 인증 없이 허용할 엔드포인트만 명시
                         .requestMatchers(
-                                "/api/auth/**",       // 로그인, 회원가입, 토큰 재발급
-                                "/oauth2/**",         // 소셜 로그인 관련
-                                "/v3/api-docs/**",    // Swagger
+                                "/api/auth/login",
+                                "/api/auth/register/**",
+                                "/api/auth/social-register",
+                                "/oauth2/**",
+                                "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-resources/**",
                                 "/webjars/**"
                         ).permitAll()
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")           // 관리자 전용
-                        .requestMatchers("/api/user/**").hasAnyRole("USER", "ADMIN") // 회원용
+                        // ② 로그인 후에만 접근 허용
+                        .requestMatchers(
+                                "/api/auth/refresh",
+                                "/api/auth/logout"
+                        ).authenticated()
+                        // ③ 역할별 보호
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/user/**").hasAnyRole("USER", "ADMIN")
+                        // ④ 나머지는 전부 인증 필요
                         .anyRequest().authenticated()
-                ).formLogin(form -> form
-                        .loginProcessingUrl("/api/auth/login") // ⭐️ form login 엔드포인트 설정 (API용)
-                        .successHandler(customAuthenticationSuccessHandler)
-                        .failureHandler(customAuthenticationFailureHandler)
-                        .permitAll()
                 )
                 .oauth2Login(oauth -> oauth
                         .successHandler(socialLoginHandler)  // 소셜 로그인 성공 후 처리
                 )
-                .addFilterBefore(requestLoggingFilter, JwtFilter.class)  // 🔥 추가
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(requestLoggingFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)  // 순서대로 정상 삽입
                 .build();
     }
 

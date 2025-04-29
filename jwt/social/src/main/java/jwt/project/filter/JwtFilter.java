@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jwt.project.utils.JwtUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -18,6 +19,7 @@ import java.io.IOException;
 import java.util.List;
 
 @Component
+@Order(2)                   // 🔥 반드시 순서 지정 (숫자는 자유, 낮을수록 먼저)
 @RequiredArgsConstructor
 public class JwtFilter extends OncePerRequestFilter {
     private final JwtUtil jwtUtil;
@@ -48,28 +50,28 @@ public class JwtFilter extends OncePerRequestFilter {
     }
     */
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest req,
+                                    HttpServletResponse res,
+                                    FilterChain chain) throws IOException, ServletException {
 
-        String header = request.getHeader("Authorization");
-
+        String header = req.getHeader("Authorization");
         if (header != null && header.startsWith("Bearer ")) {
             String token = header.substring(7);
             Claims claims = jwtUtil.validateToken(token);
 
             if (claims != null) {
                 String loginId = claims.getSubject();
-                String role = claims.get("role", String.class);
+                String role    = claims.get("role", String.class);
 
-                List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role));
+                List<GrantedAuthority> auths =
+                        List.of(new SimpleGrantedAuthority("ROLE_" + role));
+
                 UsernamePasswordAuthenticationToken auth =
-                        new UsernamePasswordAuthenticationToken(loginId, null, authorities);
+                        new UsernamePasswordAuthenticationToken(loginId, null, auths);
 
                 SecurityContextHolder.getContext().setAuthentication(auth);
             }
         }
-
-        filterChain.doFilter(request, response);
+        chain.doFilter(req, res);
     }
 }

@@ -9,6 +9,7 @@ import jwt.project.dto.response.RegisterResponse;
 import jwt.project.entity.RefreshToken;
 import jwt.project.repository.RefreshTokenRepository;
 import jwt.project.service.MemberService;
+import jwt.project.service.RefreshTokenService;
 import jwt.project.utils.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -29,6 +30,7 @@ public class AuthController {
     private final MemberService memberService;
     private final JwtUtil jwtUtil;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final RefreshTokenService refreshTokenService;
 
     @PostMapping("/register/user")
     public ResponseEntity<RegisterResponse> registerUser(@RequestBody RegisterRequest requestDto) {
@@ -53,7 +55,8 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<?> logout(@AuthenticationPrincipal String loginId) {
-        refreshTokenRepository.findByLoginId(loginId).ifPresent(refreshTokenRepository::delete);
+        refreshTokenService.delete(loginId);   // ✅ Redis 키 삭제
+        //refreshTokenRepository.findByLoginId(loginId).ifPresent(refreshTokenRepository::delete);
 
         return ResponseEntity.ok(Map.of("message", "로그아웃 처리 완료. Refresh Token 삭제됨"));
     }
@@ -69,7 +72,7 @@ public class AuthController {
 
     @PostMapping("/refresh")
     public ResponseEntity<?> refreshToken(@RequestBody Map<String, String> request) {
-        String refreshToken = request.get("refresh_token");
+        String refreshToken = request.get("refresh_token");         // 스웨거에서 사용시 "refresh_token": "토큰값"
 
         // Refresh Token 유효성 검증
         Claims claims = jwtUtil.validateToken(refreshToken);
@@ -79,21 +82,29 @@ public class AuthController {
 
         String loginId = claims.getSubject();
 
-        // DB에서 Refresh Token 확인
+        String saved = refreshTokenService.find(loginId);
+        if (saved == null || !saved.equals(refreshToken)) {
+            return ResponseEntity.status(401).body(Map.of("msg","Token mismatch"));
+        }
+        /* DB에서 Refresh Token 확인
         Optional<RefreshToken> refreshTokenOpt = refreshTokenRepository.findByLoginId(loginId);
         if(refreshTokenOpt.isEmpty() || !refreshTokenOpt.get().getId().equals(refreshToken)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Refresh token mismatch");
         }
+         */
 
         // ✅ 새로운 Access Token + Refresh Token 발급
         String newAccessToken = jwtUtil.generateToken(loginId, "USER");
         String newRefreshToken = jwtUtil.refreshToken(loginId);
 
-        // ✅ DB에 Refresh Token 갱신
+        // Redis 갱신
+        refreshTokenService.save(loginId, newRefreshToken);
+
+        /* ✅ DB에 Refresh Token 갱신
         RefreshToken storedToken = refreshTokenOpt.get();
         storedToken.setRefreshToken(newRefreshToken);
         refreshTokenRepository.save(storedToken);
-
+         */
         return ResponseEntity.ok(Map.of(
                 "accessToken", newAccessToken,
                 "refreshToken", newRefreshToken
