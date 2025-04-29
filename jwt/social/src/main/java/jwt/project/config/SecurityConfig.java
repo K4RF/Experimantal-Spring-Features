@@ -2,8 +2,10 @@ package jwt.project.config;
 
 import jwt.project.filter.JwtFilter;
 import jwt.project.filter.RequestLoggingFilter;
-import jwt.project.filter.SocialLoginHandler;
+import jwt.project.handler.SocialLoginHandler;
 import jwt.project.handler.CustomAccessDeniedHandler;
+import jwt.project.handler.StateValidatingSuccessHandler;
+import jwt.project.handler.resolver.CustomAuthorizationRequestResolver;
 import jwt.project.utils.CustomAuthenticationEntryPoint;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -24,10 +26,11 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @RequiredArgsConstructor
 public class SecurityConfig {
     private final JwtFilter jwtFilter;
-    private final SocialLoginHandler socialLoginHandler;
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
     private final CustomAccessDeniedHandler customAccessDeniedHandler;
     private final RequestLoggingFilter requestLoggingFilter;
+    private final CustomAuthorizationRequestResolver customAuthorizationRequestResolver;
+    private final StateValidatingSuccessHandler stateValidatingSuccessHandler;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -62,7 +65,10 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth -> oauth
-                        .successHandler(socialLoginHandler)  // 소셜 로그인 성공 후 처리
+                        .authorizationEndpoint(ep -> ep
+                                .authorizationRequestResolver(customAuthorizationRequestResolver)   // ★
+                        )
+                        .successHandler(stateValidatingSuccessHandler)                           // ★
                 )
                 .addFilterBefore(requestLoggingFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)  // 순서대로 정상 삽입
