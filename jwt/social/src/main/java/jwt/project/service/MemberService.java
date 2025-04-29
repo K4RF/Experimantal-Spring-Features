@@ -23,6 +23,8 @@ public class MemberService {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final RefreshTokenService refreshTokenService; // ✅ Redis 서비스 추가
+
 
     public void registerUser(String loginId, String password, String name) {
         Member member = new Member();
@@ -59,7 +61,7 @@ public class MemberService {
         String accessToken = jwtUtil.generateToken(member.getLoginId(), member.getRole().name());
         String refreshToken = jwtUtil.refreshToken(member.getLoginId());
 
-        // RefreshTOekn DB 저장
+        /* RefreshTOekn DB 저장
         Optional<RefreshToken> existingToken = refreshTokenRepository.findByLoginId(loginId);
         if(existingToken.isPresent()) {
             existingToken.get().setRefreshToken(refreshToken);
@@ -67,7 +69,10 @@ public class MemberService {
         }else{
             refreshTokenRepository.save(new RefreshToken(null, loginId, refreshToken));
         }
+         */
 
+        // ✅ Redis에 저장 (자동 TTL)
+        refreshTokenService.save(loginId, refreshToken);
         return Map.of("accessToken", accessToken, "refreshToken", refreshToken);
     }
 

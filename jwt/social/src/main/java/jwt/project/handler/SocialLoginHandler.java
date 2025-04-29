@@ -1,4 +1,4 @@
-package jwt.project.filter;
+package jwt.project.handler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
