@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Entity
 @Getter
@@ -28,8 +29,10 @@ public class Member {
     @Enumerated(EnumType.STRING)
     private Role role;
 
-    @Enumerated(EnumType.STRING)
-    private SocialType socialType;
+    @Embedded
+    private SocialInfo social;        // null 이면 미연동
 
-    private String socialId;      // 구글에서 제공하는 sub 값
+    /* 핵심 도메인 규칙 */
+    public void encodePw(PasswordEncoder pe){ this.password = pe.encode(this.password); }
+    public void disconnectSocial(){ this.social = null; }
 }
