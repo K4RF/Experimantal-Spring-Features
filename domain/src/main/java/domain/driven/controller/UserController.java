@@ -28,12 +28,14 @@ public class UserController {
     @GetMapping("/me")
     public ResponseEntity<?> me(@AuthenticationPrincipal String loginId) {
         Member m = qry.me(loginId);
-        return ResponseEntity.ok(Map.of(
-                "loginId",  m.getLoginId(),
-                "name",     m.getName(),
-                "role",     m.getRole(),
-                "socialType", m.getSocial()!=null? m.getSocial().getSocialType() : null
-        ));
+        Map<String, Object> result = new HashMap<>();
+        result.put("loginId", m.getLoginId());
+        result.put("name", m.getName());
+        result.put("role", m.getRole());
+        if (m.getSocial() != null) {
+            result.put("socialType", m.getSocial().getSocialType());
+        }
+        return ResponseEntity.ok(result);
     }
 
     /* ---------- 소셜 연결 해제 ---------- */
