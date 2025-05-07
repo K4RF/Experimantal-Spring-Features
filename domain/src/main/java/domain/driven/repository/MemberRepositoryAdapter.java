@@ -21,7 +21,7 @@ public class MemberRepositoryAdapter implements MemberRepositoryPort {
     @Override
     public Optional<Member> findBySocialIdAndSocialType(
             String socialId, SocialType socialType) {
-        return jpa.findBySocialIdAndSocialType(socialId, socialType);
+        return jpa.findBySocial_SocialIdAndSocial_SocialType(socialId, socialType);
     }
 
     @Override

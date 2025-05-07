@@ -7,8 +7,6 @@ import domain.driven.entity.enums.SocialType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
-import javax.management.relation.Role;
-
 @Getter
 @AllArgsConstructor
 public class UserInfoResponseDto {
@@ -22,7 +20,7 @@ public class UserInfoResponseDto {
                 member.getLoginId(),
                 member.getName(),
                 member.getRole().name(),
-                member.getSocialType()
+                member.getSocial().getSocialType()
         );
     }
 }

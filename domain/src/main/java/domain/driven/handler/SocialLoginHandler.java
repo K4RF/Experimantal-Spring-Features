@@ -60,7 +60,7 @@ public class SocialLoginHandler implements AuthenticationSuccessHandler {
 
         response.setContentType("application/json; charset=utf-8");
 
-        Optional<Member> memberOpt = memberRepository.findBySocialIdAndSocialType(socialId, socialType);
+        Optional<Member> memberOpt = memberRepository.findBySocial_SocialIdAndSocial_SocialType(socialId, socialType);
 
         if(memberOpt.isPresent()){
             // 로그인 처리

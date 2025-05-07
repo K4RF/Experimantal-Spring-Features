@@ -15,17 +15,20 @@ import java.security.SecureRandom;
 import java.util.concurrent.TimeUnit;
 
 @Component
-@RequiredArgsConstructor
-public class CustomAuthorizationRequestResolver
-        implements OAuth2AuthorizationRequestResolver {
+public class CustomAuthorizationRequestResolver implements OAuth2AuthorizationRequestResolver {
 
-    private final ClientRegistrationRepository repo;
+    private final ClientRegistrationRepository clientRegistrationRepository;
     private final SecureRandom random = new SecureRandom();
-    private final StringRedisTemplate redis;          // ┐ state 저장소  (쿠키를 쓰고 싶으면 생략)
-    private static final long EXPIRE = 300;           // ┘ 5분 TTL
+    private final StringRedisTemplate redis;
+    private static final long EXPIRE = 300;
 
-    private final OAuth2AuthorizationRequestResolver defaultResolver =
-            new DefaultOAuth2AuthorizationRequestResolver(repo, "/oauth2/authorization");
+    private final OAuth2AuthorizationRequestResolver defaultResolver;
+
+    public CustomAuthorizationRequestResolver(ClientRegistrationRepository clientRegistrationRepository, StringRedisTemplate redis) {
+        this.clientRegistrationRepository = clientRegistrationRepository;
+        this.redis = redis;
+        this.defaultResolver = new DefaultOAuth2AuthorizationRequestResolver(clientRegistrationRepository, "/oauth2/authorization");
+    }
 
     @Override
     public OAuth2AuthorizationRequest resolve(HttpServletRequest req) {
