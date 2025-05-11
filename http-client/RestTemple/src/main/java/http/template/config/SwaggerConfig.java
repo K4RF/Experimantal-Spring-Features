@@ -1,4 +1,4 @@
-package jwt.project.config;
+package http.template.config;
 
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
