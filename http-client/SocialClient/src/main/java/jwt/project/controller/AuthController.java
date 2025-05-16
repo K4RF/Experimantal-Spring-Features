@@ -1,8 +1,10 @@
 package jwt.project.controller;
 
 import io.jsonwebtoken.Claims;
+import jwt.project.dto.SocialUserInfo;
 import jwt.project.dto.request.LoginRequest;
 import jwt.project.dto.request.RegisterRequest;
+import jwt.project.dto.request.SocialLoginRequest;
 import jwt.project.dto.request.SocialRegisterRequest;
 import jwt.project.dto.response.LoginResponse;
 import jwt.project.dto.response.RegisterResponse;
@@ -10,6 +12,7 @@ import jwt.project.entity.RefreshToken;
 import jwt.project.repository.RefreshTokenRepository;
 import jwt.project.service.MemberService;
 import jwt.project.service.RefreshTokenService;
+import jwt.project.service.SocialLoginService;
 import jwt.project.utils.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -23,6 +26,8 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.Map;
 import java.util.Optional;
 
+import static jwt.project.entity.enums.SocialType.*;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/auth")
@@ -31,6 +36,7 @@ public class AuthController {
     private final JwtUtil jwtUtil;
     private final RefreshTokenRepository refreshTokenRepository;
     private final RefreshTokenService refreshTokenService;
+    private final SocialLoginService socialLoginService;
 
     @PostMapping("/register/user")
     public ResponseEntity<RegisterResponse> registerUser(@RequestBody RegisterRequest requestDto) {
@@ -69,6 +75,21 @@ public class AuthController {
                 "loginId", request.getLoginId()
         ));
     }
+    @PostMapping("/social-login")
+    public ResponseEntity<LoginResponse> socialLogin(@RequestBody SocialLoginRequest request) {
+        SocialUserInfo userInfo = null;
+        switch (request.getSocialType()) {
+            case GOOGLE -> userInfo = socialLoginService.getGoogleUserInfo(request.getAccessToken());
+            case KAKAO  -> userInfo = socialLoginService.getKakaoUserInfo(request.getAccessToken());
+            case NAVER  -> userInfo = socialLoginService.getNaverUserInfo(request.getAccessToken());
+        }
+
+        // userInfo에서 sub/socialId, email, name 등 추출
+        // 이미 가입된 회원인지 확인, 없으면 회원가입, 있으면 로그인 처리
+        LoginResponse response = memberService.socialLoginOrRegister(userInfo, request.getSocialType());
+        return ResponseEntity.ok(response);
+    }
+
 
     @PostMapping("/refresh")
     public ResponseEntity<?> refreshToken(@RequestBody Map<String, String> request) {

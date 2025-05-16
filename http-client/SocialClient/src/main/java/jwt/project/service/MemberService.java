@@ -1,7 +1,9 @@
 package jwt.project.service;
 
 import jakarta.transaction.Transactional;
+import jwt.project.dto.SocialUserInfo;
 import jwt.project.dto.request.SocialRegisterRequest;
+import jwt.project.dto.response.LoginResponse;
 import jwt.project.entity.Member;
 import jwt.project.entity.RefreshToken;
 import jwt.project.entity.enums.Role;
@@ -74,6 +76,30 @@ public class MemberService {
         // ✅ Redis에 저장 (자동 TTL)
         refreshTokenService.save(loginId, refreshToken);
         return Map.of("accessToken", accessToken, "refreshToken", refreshToken);
+    }
+
+    public LoginResponse socialLoginOrRegister(SocialUserInfo userInfo, SocialType socialType) {
+        // socialId(구글: sub, 카카오: id, 네이버: id 등)로 회원 조회
+        Optional<Member> memberOpt = memberRepository.findBySocialIdAndSocialType(userInfo.getSocialId(), socialType);
+        Member member;
+        if (memberOpt.isEmpty()) {
+            // 회원가입
+            member = new Member();
+            member.setLoginId(userInfo.getEmail());
+            member.setName(userInfo.getName());
+            member.setRole(Role.USER);
+            member.setSocialType(socialType);
+            member.setSocialId(userInfo.getSocialId());
+            memberRepository.save(member);
+        } else {
+            member = memberOpt.get();
+        }
+        // JWT 토큰 발급 및 Redis에 refreshToken 저장
+        String accessToken = jwtUtil.generateToken(member.getLoginId(), member.getRole().name());
+        String refreshToken = jwtUtil.refreshToken(member.getLoginId());
+        refreshTokenService.save(member.getLoginId(), refreshToken);
+
+        return new LoginResponse(accessToken, refreshToken, member.getLoginId());
     }
 
     public void registerSocialUser(SocialRegisterRequest request) {

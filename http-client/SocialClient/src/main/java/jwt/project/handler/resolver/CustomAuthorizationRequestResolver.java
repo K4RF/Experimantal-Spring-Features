@@ -1,5 +1,6 @@
 package jwt.project.handler.resolver;
 
+import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -23,8 +24,12 @@ public class CustomAuthorizationRequestResolver
     private final StringRedisTemplate redis;          // ┐ state 저장소  (쿠키를 쓰고 싶으면 생략)
     private static final long EXPIRE = 300;           // ┘ 5분 TTL
 
-    private final OAuth2AuthorizationRequestResolver defaultResolver =
-            new DefaultOAuth2AuthorizationRequestResolver(repo, "/oauth2/authorization");
+    private OAuth2AuthorizationRequestResolver defaultResolver;
+
+    @PostConstruct
+    public void init() {
+        this.defaultResolver = new DefaultOAuth2AuthorizationRequestResolver(repo, "/oauth2/authorization");
+    }
 
     @Override
     public OAuth2AuthorizationRequest resolve(HttpServletRequest req) {
