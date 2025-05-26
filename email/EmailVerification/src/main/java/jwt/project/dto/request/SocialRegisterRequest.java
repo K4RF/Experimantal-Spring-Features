@@ -7,7 +7,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class SocialRegisterRequest {
-    private String loginId;
+    private String email;
     private String password;
     private String name;
     private String socialId;

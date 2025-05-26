@@ -19,7 +19,7 @@ public class RefreshToken {
     private Long id;
 
     @Column(unique = true)
-    private String loginId;
+    private String email;
 
     private String refreshToken;
 }
