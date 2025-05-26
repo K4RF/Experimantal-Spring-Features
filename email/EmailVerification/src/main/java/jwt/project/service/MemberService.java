@@ -14,9 +14,12 @@ import jwt.project.utils.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -26,6 +29,7 @@ public class MemberService {
     private final JwtUtil jwtUtil;
     private final RefreshTokenRepository refreshTokenRepository;
     private final RefreshTokenService refreshTokenService; // ✅ Redis 서비스 추가
+    private final EmailService emailService;
 
 
     public void registerUser(String loginId, String password, String name) {
@@ -53,8 +57,26 @@ public class MemberService {
                 .orElseThrow(() -> new RuntimeException("회원을 찾을 수 없습니다."));
     }
 
-    public  Map<String, String> loginAndGetToken(String loginId, String password) {
+    public Map<String, String> loginAndGetToken(String loginId, String password) {
         Member member = findByLoginId(loginId);
+
+        // 소셜 회원이 아니라면 이메일 인증 체크
+        if (member.getSocialType() == null) {
+            if (!member.isEmailVerified()) {
+                // 인증 토큰 생성 및 저장
+                String token = UUID.randomUUID().toString();
+                member.setEmailVerificationToken(token);
+                member.setEmailVerificationExpiry(LocalDateTime.now().plusHours(1));
+                memberRepository.save(member);
+
+                // 인증 메일 발송
+                String siteUrl = ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString();
+                emailService.sendVerificationMail(member.getLoginId(), token, siteUrl);
+
+                throw new IllegalStateException("이메일 인증이 필요합니다. 이메일을 확인해주세요.");
+            }
+        }
+
         if(!passwordEncoder.matches(password, member.getPassword())) {
             throw new RuntimeException("비밀번호가 일치하지 않습니다");
         }
@@ -63,18 +85,9 @@ public class MemberService {
         String accessToken = jwtUtil.generateToken(member.getLoginId(), member.getRole().name());
         String refreshToken = jwtUtil.refreshToken(member.getLoginId());
 
-        /* RefreshTOekn DB 저장
-        Optional<RefreshToken> existingToken = refreshTokenRepository.findByLoginId(loginId);
-        if(existingToken.isPresent()) {
-            existingToken.get().setRefreshToken(refreshToken);
-            refreshTokenRepository.save(existingToken.get());
-        }else{
-            refreshTokenRepository.save(new RefreshToken(null, loginId, refreshToken));
-        }
-         */
-
         // ✅ Redis에 저장 (자동 TTL)
         refreshTokenService.save(loginId, refreshToken);
+
         return Map.of("accessToken", accessToken, "refreshToken", refreshToken);
     }
 
