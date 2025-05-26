@@ -32,9 +32,9 @@ public class MemberService {
     private final EmailService emailService;
 
 
-    public void registerUser(String loginId, String password, String name) {
+    public void registerUser(String email, String password, String name) {
         Member member = new Member();
-        member.setLoginId(loginId);
+        member.setEmail(email);
         member.setPassword(passwordEncoder.encode(password));
         member.setName(name);
         member.setRole(Role.USER);
@@ -42,9 +42,9 @@ public class MemberService {
         memberRepository.save(member);
     }
 
-    public void registerAdmin(String loginId, String password, String name) {
+    public void registerAdmin(String email, String password, String name) {
         Member member = new Member();
-        member.setLoginId(loginId);
+        member.setEmail(email);
         member.setPassword(passwordEncoder.encode(password));
         member.setName(name);
         member.setRole(Role.ADMIN);
@@ -52,13 +52,13 @@ public class MemberService {
         memberRepository.save(member);
     }
 
-    public Member findByLoginId(String loginId) {
-        return memberRepository.findByLoginId(loginId)
+    public Member findByEmail(String email) {
+        return memberRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("회원을 찾을 수 없습니다."));
     }
 
-    public Map<String, String> loginAndGetToken(String loginId, String password) {
-        Member member = findByLoginId(loginId);
+    public Map<String, String> loginAndGetToken(String email, String password) {
+        Member member = findByEmail(email);
 
         // 소셜 회원이 아니라면 이메일 인증 체크
         if (member.getSocialType() == null) {
@@ -71,7 +71,7 @@ public class MemberService {
 
                 // 인증 메일 발송
                 String siteUrl = ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString();
-                emailService.sendVerificationMail(member.getLoginId(), token, siteUrl);
+                emailService.sendVerificationMail(member.getEmail(), token, siteUrl);
 
                 throw new IllegalStateException("이메일 인증이 필요합니다. 이메일을 확인해주세요.");
             }
@@ -82,11 +82,11 @@ public class MemberService {
         }
 
         // AccessToken과 RefreshToken 생성
-        String accessToken = jwtUtil.generateToken(member.getLoginId(), member.getRole().name());
-        String refreshToken = jwtUtil.refreshToken(member.getLoginId());
+        String accessToken = jwtUtil.generateToken(member.getEmail(), member.getRole().name());
+        String refreshToken = jwtUtil.refreshToken(member.getEmail());
 
         // ✅ Redis에 저장 (자동 TTL)
-        refreshTokenService.save(loginId, refreshToken);
+        refreshTokenService.save(email, refreshToken);
 
         return Map.of("accessToken", accessToken, "refreshToken", refreshToken);
     }
@@ -98,7 +98,7 @@ public class MemberService {
         if (memberOpt.isEmpty()) {
             // 회원가입
             member = new Member();
-            member.setLoginId(userInfo.getEmail());
+            member.setEmail(userInfo.getEmail());
             member.setName(userInfo.getName());
             member.setRole(Role.USER);
             member.setSocialType(socialType);
@@ -108,11 +108,11 @@ public class MemberService {
             member = memberOpt.get();
         }
         // JWT 토큰 발급 및 Redis에 refreshToken 저장
-        String accessToken = jwtUtil.generateToken(member.getLoginId(), member.getRole().name());
-        String refreshToken = jwtUtil.refreshToken(member.getLoginId());
-        refreshTokenService.save(member.getLoginId(), refreshToken);
+        String accessToken = jwtUtil.generateToken(member.getEmail(), member.getRole().name());
+        String refreshToken = jwtUtil.refreshToken(member.getEmail());
+        refreshTokenService.save(member.getEmail(), refreshToken);
 
-        return new LoginResponse(accessToken, refreshToken, member.getLoginId());
+        return new LoginResponse(accessToken, refreshToken, member.getEmail());
     }
 
     public void registerSocialUser(SocialRegisterRequest request) {
@@ -124,7 +124,7 @@ public class MemberService {
         SocialType socialType = Optional.ofNullable(request.getSocialType())
                 .orElseThrow(() -> new IllegalArgumentException("소셜 타입이 필요합니다."));
         Member member = new Member();
-        member.setLoginId(request.getLoginId());
+        member.setEmail(request.getEmail());
         member.setPassword(encodedPassword);
         member.setRole(Role.USER);
         member.setSocialType(socialType);
@@ -135,8 +135,8 @@ public class MemberService {
     }
 
     @Transactional
-    public void disconnectSocialAccount(String loginId) {
-        Member member = findByLoginId(loginId);
+    public void disconnectSocialAccount(String email) {
+        Member member = findByEmail(email);
 
         member.setSocialId(null);
         member.setSocialType(null);

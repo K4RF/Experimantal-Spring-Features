@@ -24,11 +24,11 @@ public class UserController {
     private final MemberService memberService;
 
     @GetMapping("/me")
-    public ResponseEntity<?> getMe(@AuthenticationPrincipal String loginId) {
-        Member member = memberService.findByLoginId(loginId);
+    public ResponseEntity<?> getMe(@AuthenticationPrincipal String email) {
+        Member member = memberService.findByEmail(email);
 
         Map<String, Object> result = new HashMap<>();
-        result.put("loginId", member.getLoginId());
+        result.put("email", member.getEmail());
         result.put("name", member.getName());
         result.put("role", member.getRole());
         result.put("socialType", member.getSocialType()); // null 허용

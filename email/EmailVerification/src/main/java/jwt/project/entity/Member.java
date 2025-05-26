@@ -20,8 +20,8 @@ public class Member {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true)
-    private String loginId;
+    @Column(unique = true, nullable = false)
+    private String email; // loginId -> email로 변경
 
     private String password;
 

@@ -65,14 +65,14 @@ public class SocialLoginHandler implements AuthenticationSuccessHandler {
             // 로그인 처리
             Member member = memberOpt.get();
             // AccessToken 과 Refresh Token 생성
-            String accessToken = jwtUtil.generateToken(member.getLoginId(), member.getRole().name());
-            String refreshToken = jwtUtil.refreshToken(member.getLoginId());
+            String accessToken = jwtUtil.generateToken(member.getEmail(), member.getRole().name());
+            String refreshToken = jwtUtil.refreshToken(member.getEmail());
 
             Map<String, Object> result = Map.of(
                     "message", "소셜 로그인 성공",
                     "accessToken", accessToken,
                     "refreshToken", refreshToken,
-                    "loginId", member.getLoginId()
+                    "loginId", member.getEmail()
             );
 
             response.getWriter().write(objectMapper.writeValueAsString(result));

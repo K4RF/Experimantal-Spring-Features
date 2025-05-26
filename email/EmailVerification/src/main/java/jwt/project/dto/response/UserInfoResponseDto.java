@@ -11,14 +11,14 @@ import javax.management.relation.Role;
 @Getter
 @AllArgsConstructor
 public class UserInfoResponseDto {
-    private String loginId;
+    private String email;
     private String name;
     private String role;
     private SocialType socialType;
 
     public static UserInfoResponseDto from(Member member) {
         return new UserInfoResponseDto(
-                member.getLoginId(),
+                member.getEmail(),
                 member.getName(),
                 member.getRole().name(),
                 member.getSocialType()

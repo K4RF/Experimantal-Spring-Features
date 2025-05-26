@@ -18,15 +18,15 @@ public class RefreshTokenService {
                 .set(key(loginId), refreshToken, EXPIRE_SECONDS, TimeUnit.SECONDS);
     }
 
-    public String find(String loginId) {
-        return redisTemplate.opsForValue().get(key(loginId));
+    public String find(String email) {
+        return redisTemplate.opsForValue().get(key(email));
     }
 
-    public void delete(String loginId) {
-        redisTemplate.delete(key(loginId));
+    public void delete(String email) {
+        redisTemplate.delete(key(email));
     }
 
-    private String key(String loginId) {      // 키 네이밍 규칙
-        return "RT:" + loginId;
+    private String key(String email) {      // 키 네이밍 규칙
+        return "RT:" + email;
     }
 }

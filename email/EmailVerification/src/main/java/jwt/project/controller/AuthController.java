@@ -40,23 +40,23 @@ public class AuthController {
 
     @PostMapping("/register/user")
     public ResponseEntity<RegisterResponse> registerUser(@RequestBody RegisterRequest requestDto) {
-        memberService.registerUser(requestDto.getLoginId(), requestDto.getPassword(), requestDto.getName());
-        return ResponseEntity.ok(new RegisterResponse("회원가입 성공(USER)", requestDto.getLoginId()));
+        memberService.registerUser(requestDto.getEmail(), requestDto.getPassword(), requestDto.getName());
+        return ResponseEntity.ok(new RegisterResponse("회원가입 성공(USER)", requestDto.getEmail()));
     }
 
     @PostMapping("/register/admin")
     public ResponseEntity<RegisterResponse> registerAdmin(@RequestBody RegisterRequest requestDto) {
-        memberService.registerAdmin(requestDto.getLoginId(), requestDto.getPassword(), requestDto.getName());
-        return ResponseEntity.ok(new RegisterResponse("회원가입 성공(ADMIN)", requestDto.getLoginId()));
+        memberService.registerAdmin(requestDto.getEmail(), requestDto.getPassword(), requestDto.getName());
+        return ResponseEntity.ok(new RegisterResponse("회원가입 성공(ADMIN)", requestDto.getEmail()));
     }
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest requestDto) {
-        Map<String, String> tokens = memberService.loginAndGetToken(requestDto.getLoginId(), requestDto.getPassword());
+        Map<String, String> tokens = memberService.loginAndGetToken(requestDto.getEmail(), requestDto.getPassword());
         String accessToken = tokens.get("accessToken");
         String refreshToken = tokens.get("refreshToken");
 
-        return ResponseEntity.ok(new LoginResponse(accessToken, refreshToken, requestDto.getLoginId()));
+        return ResponseEntity.ok(new LoginResponse(accessToken, refreshToken, requestDto.getEmail()));
     }
 
     @PostMapping("/logout")
@@ -72,7 +72,7 @@ public class AuthController {
         memberService.registerSocialUser(request);
         return ResponseEntity.ok(Map.of(
                 "message", "소셜 회원가입 성공",
-                "loginId", request.getLoginId()
+                "loginId", request.getEmail()
         ));
     }
     @PostMapping("/social-login")
