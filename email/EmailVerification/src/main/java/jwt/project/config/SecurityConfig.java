@@ -45,6 +45,7 @@ public class SecurityConfig {
                         // ① 인증 없이 허용할 엔드포인트만 명시
                         .requestMatchers(
                                 "/api/auth/login",
+                                "/api/auth/verify-email",
                                 "/login/**",
                                 "/api/auth/register/**",
                                 "/api/auth/social-register",
