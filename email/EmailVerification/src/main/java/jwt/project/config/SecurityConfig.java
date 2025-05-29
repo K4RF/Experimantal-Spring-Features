@@ -46,7 +46,7 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/auth/login",
                                 "/api/auth/verify-email",
-                                "/login/**",
+                                "/login**",
                                 "/api/auth/register/**",
                                 "/api/auth/social-register",
                                 "/api/auth/social-login",
@@ -68,6 +68,7 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth -> oauth
+                        .failureUrl("/login?error")
                         .authorizationEndpoint(ep -> ep
                                 .authorizationRequestResolver(customAuthorizationRequestResolver)   // ★
                         )
