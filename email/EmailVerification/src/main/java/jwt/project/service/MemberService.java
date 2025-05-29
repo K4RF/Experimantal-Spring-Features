@@ -32,24 +32,38 @@ public class MemberService {
     private final EmailService emailService;
 
 
-    public void registerUser(String email, String password, String name) {
-        Member member = new Member();
-        member.setEmail(email);
-        member.setPassword(passwordEncoder.encode(password));
-        member.setName(name);
-        member.setRole(Role.USER);
+    private Member registerMember(String email, String password, String name, Role role) {
+        // 중복 이메일 체크
+        if (memberRepository.existsByEmail(email)) {
+            throw new IllegalStateException("이미 가입된 이메일입니다.");
+        }
 
-        memberRepository.save(member);
+        // 회원 생성
+        Member member = Member.builder()
+                .email(email)
+                .password(passwordEncoder.encode(password))
+                .name(name)
+                .role(role)
+                .build();
+
+        // 이메일 인증 토큰 생성 및 저장
+        String verificationToken = UUID.randomUUID().toString();
+        member.setEmailVerificationToken(verificationToken);
+        member.setEmailVerificationExpiry(LocalDateTime.now().plusHours(24));
+
+        // 이메일 인증 링크 발송
+        String siteUrl = "http://localhost:8080"; // 개발 환경용 (실제 배포 시 도메인 변경)
+        emailService.sendVerificationMail(email, verificationToken, siteUrl);
+
+        return memberRepository.save(member);
+    }
+
+    public void registerUser(String email, String password, String name) {
+        registerMember(email, password, name, Role.USER);
     }
 
     public void registerAdmin(String email, String password, String name) {
-        Member member = new Member();
-        member.setEmail(email);
-        member.setPassword(passwordEncoder.encode(password));
-        member.setName(name);
-        member.setRole(Role.ADMIN);
-
-        memberRepository.save(member);
+        registerMember(email, password, name, Role.ADMIN);
     }
 
     public Member findByEmail(String email) {
@@ -63,16 +77,6 @@ public class MemberService {
         // 소셜 회원이 아니라면 이메일 인증 체크
         if (member.getSocialType() == null) {
             if (!member.isEmailVerified()) {
-                // 인증 토큰 생성 및 저장
-                String token = UUID.randomUUID().toString();
-                member.setEmailVerificationToken(token);
-                member.setEmailVerificationExpiry(LocalDateTime.now().plusHours(1));
-                memberRepository.save(member);
-
-                // 인증 메일 발송
-                String siteUrl = ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString();
-                emailService.sendVerificationMail(member.getEmail(), token, siteUrl);
-
                 throw new IllegalStateException("이메일 인증이 필요합니다. 이메일을 확인해주세요.");
             }
         }
