@@ -47,12 +47,17 @@ public class EmailService {
         }
     }
 
-    public void sendSimpleMail(String to, String subject, String text) {
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo(to);
-        message.setFrom(from);
-        message.setSubject(subject);
-        message.setText(text);
-        mailSender.send(message);
+    public void sendHtmlMail(String to, String subject, String html) {
+        MimeMessage message = mailSender.createMimeMessage();
+        try {
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setTo(to);
+            helper.setFrom(from);
+            helper.setSubject(subject);
+            helper.setText(html, true); // HTML 활성화
+            mailSender.send(message);
+        } catch (MessagingException e) {
+            throw new RuntimeException("이메일 발송 실패", e);
+        }
     }
 }
