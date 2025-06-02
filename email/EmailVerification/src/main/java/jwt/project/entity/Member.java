@@ -34,7 +34,7 @@ public class Member {
     private String socialId;      // 구글에서 제공하는 sub 값
 
     // 이메일 인증 관련
-    @Column(name = "email_verified")  // ✅ snake_case 매핑
+    @Column(name = "email_verified")
     private boolean emailVerified = false; // 이메일 인증 여부
     private String emailVerificationToken; // 인증용 토큰
     private LocalDateTime emailVerificationExpiry; // 만료 시간

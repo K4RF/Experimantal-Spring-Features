@@ -74,9 +74,9 @@ public class SecurityConfig {
                 .oauth2Login(oauth -> oauth
                         .failureUrl("/login?error")
                         .authorizationEndpoint(ep -> ep
-                                .authorizationRequestResolver(customAuthorizationRequestResolver)   // ★
+                                .authorizationRequestResolver(customAuthorizationRequestResolver)
                         )
-                        .successHandler(stateValidatingSuccessHandler)                           // ★
+                        .successHandler(stateValidatingSuccessHandler)
                 )
                 .addFilterBefore(requestLoggingFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)  // 순서대로 정상 삽입

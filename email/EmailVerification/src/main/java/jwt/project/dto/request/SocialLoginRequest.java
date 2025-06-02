@@ -10,5 +10,4 @@ import lombok.Setter;
 public class SocialLoginRequest {
     private String accessToken;
     private SocialType socialType;
-    // getter/setter
 }
