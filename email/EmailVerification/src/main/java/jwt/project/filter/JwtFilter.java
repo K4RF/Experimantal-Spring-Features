@@ -55,6 +55,10 @@ public class JwtFilter extends OncePerRequestFilter {
                                     FilterChain chain) throws IOException, ServletException {
 
         String header = req.getHeader("Authorization");
+        if (req.getRequestURI().startsWith("/api/pass/reset-password")) {
+            chain.doFilter(req, res);
+            return;
+        }
         if (header != null && header.startsWith("Bearer ")) {
             String token = header.substring(7);
             Claims claims = jwtUtil.validateToken(token);

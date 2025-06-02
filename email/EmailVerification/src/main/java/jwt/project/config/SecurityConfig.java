@@ -10,6 +10,7 @@ import jwt.project.utils.CustomAuthenticationEntryPoint;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -46,6 +47,7 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/auth/login",
                                 "/api/auth/verify-email",
+                                "/api/pass/**",
                                 "/login**",
                                 "/api/auth/register/**",
                                 "/api/auth/social-register",
@@ -56,6 +58,8 @@ public class SecurityConfig {
                                 "/swagger-resources/**",
                                 "/webjars/**"
                         ).permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/pass/reset-password").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/pass/reset-password").permitAll()
                         // ② 로그인 후에만 접근 허용
                         .requestMatchers(
                                 "/api/auth/refresh",

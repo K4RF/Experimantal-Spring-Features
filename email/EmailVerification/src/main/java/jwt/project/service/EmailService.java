@@ -46,4 +46,13 @@ public class EmailService {
             throw new RuntimeException("이메일 발송 실패", e);
         }
     }
+
+    public void sendSimpleMail(String to, String subject, String text) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(to);
+        message.setFrom(from);
+        message.setSubject(subject);
+        message.setText(text);
+        mailSender.send(message);
+    }
 }
