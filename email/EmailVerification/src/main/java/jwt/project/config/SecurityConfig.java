@@ -58,8 +58,6 @@ public class SecurityConfig {
                                 "/swagger-resources/**",
                                 "/webjars/**"
                         ).permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/pass/reset-password").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/pass/reset-password").permitAll()
                         // ② 로그인 후에만 접근 허용
                         .requestMatchers(
                                 "/api/auth/refresh",
