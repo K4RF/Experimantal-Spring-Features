@@ -54,7 +54,8 @@ public class SecurityConfig {
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-resources/**",
-                                "/webjars/**"
+                                "/webjars/**",
+                                "/actuator/**"
                         ).permitAll()
                         // ② 로그인 후에만 접근 허용
                         .requestMatchers(
