@@ -14,6 +14,7 @@ import java.io.Serializable;
 @Builder
 public class MemberCache implements Serializable {
     @Id
+    private String id; // 또는 Long, 이메일 등 고유값
     private String email;
     private String name;
     private String role;
