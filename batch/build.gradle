@@ -62,8 +62,11 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 	implementation 'io.micrometer:micrometer-registry-prometheus'
 
-	//Redis Cache
+	// Redis Cache
 	implementation 'org.springframework.boot:spring-boot-starter-cache'
+
+	// Spring Batch
+	implementation 'org.springframework.boot:spring-boot-starter-batch'
 }
 
 tasks.named('test') {
