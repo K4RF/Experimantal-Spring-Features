@@ -71,7 +71,7 @@ public class BatchConfig {
                 .build();
     }
 
-    // 5. Job: Step을 실행하는 배치 잡
+    // 5. Job: Step을 실행하는 배치
     @Bean
     public Job memberBatchJob(Step memberBatchStep, JobCompletionNotificationListener listener) {
         return new JobBuilder("memberBatchJob", jobRepository)

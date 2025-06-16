@@ -21,7 +21,7 @@ public class CacheManagerConfig {
     }
      */
 
-    // 직력화
+    // 직력화 변환 추가 버전
     @Bean
     public RedisCacheManager redisCacheManager(RedisConnectionFactory connectionFactory) {
         RedisCacheConfiguration config = RedisCacheConfiguration.defaultCacheConfig()
