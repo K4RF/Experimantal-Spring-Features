@@ -79,4 +79,5 @@ public class BatchConfig {
                 .listener(listener)
                 .build();
     }
+    // Batch 작업 시에 h2 데이터 베이스 사용할 경우(TCP 모드) 테이블 직접 생성
 }
